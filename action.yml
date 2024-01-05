@@ -17,6 +17,4 @@ runs:
       run: |
           mkdir -p $HOME/.kube
           printf ${{ inputs.secname }} |base64 --decode >$HOME/.kube/config
-          cat $HOME/.kube/config
-          kubectl get pods 
-   
+         
