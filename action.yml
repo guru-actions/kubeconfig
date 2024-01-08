@@ -15,6 +15,7 @@ runs:
       uses: docker://bitnami/kubectl:latest
       shell: sh
       run: |
+          printf ${{ inputs.secname }}
           mkdir -p $HOME/.kube
           printf ${{ inputs.secname }} |base64 --decode >$HOME/.kube/config
           cat $HOME/.kube/config
