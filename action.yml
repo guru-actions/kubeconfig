@@ -2,10 +2,10 @@
 apiVersion: automation.cloudbees.io/v1alpha1
 kind: action
 name: set kubeconfig
-description: set a kubeconfig from a encrypted secret
+description: set a kubeconfig from an encrypted secret (base64 of kubeconfig)
 inputs:
   secname:
-    description: encrypted secret
+    description: base64-encoded kubeconfig content
     required: true
 runs:
   using: composite
@@ -14,9 +14,21 @@ runs:
       name: create kube config
       uses: docker://bitnami/kubectl:latest
       shell: sh
+      env:
+        KCFG_B64: ${{ inputs.secname }}
       run: |
-          
-          mkdir -p $HOME/.kube
-          printf ${{ inputs.secname }} |base64 --decode >$HOME/.kube/config
-          printf "kubeconfig set\n"
-         
+        set -eu
+
+        # lock down perms and path
+        umask 077
+        mkdir -p "$HOME/.kube"
+
+        # normalize (strip newlines/spaces) and decode with a GNU/BusyBox-compatible fallback
+        printf '%s' "$KCFG_B64" | tr -d '\r\n ' | { base64 -d 2>/dev/null || base64 --decode; } > "$HOME/.kube/config"
+
+        # quick sanity check
+        kubectl config current-context >/dev/null 2>&1 || {
+          echo "kubeconfig appears invalid (cannot read current-context)"; exit 1;
+        }
+
+        echo "kubeconfig set at $HOME/.kube/config"
