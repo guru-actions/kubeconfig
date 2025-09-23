@@ -12,7 +12,7 @@ runs:
   steps:
     - id: createconfig
       name: create kube config
-      uses: docker://bitnami/kubectl:1.33-debian-12
+      uses: docker://rancher/kubectl:v1.32.9
       shell: sh
       env:
         KCFG_B64: ${{ inputs.secname }}
